@@ -40,6 +40,13 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
+// todo dsl???
+//        image {
+//            url = ""
+//            errorHolder =""
+//            dasd = ""
+//        }
+
     }
 }
 

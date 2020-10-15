@@ -15,10 +15,6 @@ data class PicassoOption(
     val enableDebug: Boolean = false
 )
 
-data class PicassoSize(
-    val height: Int,
-    val width: Int
-)
 
 enum class SkipCache {
     NONE,
@@ -89,6 +85,9 @@ fun ImageView.loadImage(imageUrl: String?, picassoOption: PicassoOption) {
                 }
             }
             .also {
+                /***
+                 * wjay ,asdkoasd aldkas
+                 */
                 when (cacheLevel) {
                     SkipCache.NONE -> {
                         //do nothing
