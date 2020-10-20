@@ -10,18 +10,17 @@ data class PicassoOption(
     @DrawableRes val errorHolder: Int,
     @DrawableRes val placeholder: Int? = null,
     val scaleType: PicassoScaleType = PicassoScaleType.Default,
-    val cacheLevel: SkipCache = SkipCache.NONE,
-    val picassoCallback: Callback? = null,
+    val cache: PicassoCache = PicassoCache.Default,
+    val picassoCallback: Callback = Callback.EmptyCallback(),
     val enableDebug: Boolean = false
 )
 
-
-enum class SkipCache {
-    NONE,
-    ALL,
-    MEMORY,
-    DISK,
-    NETWORK
+enum class PicassoCache {
+    Default, // LRU->DISK->NETWORK
+    Disk, // NO_LRU->DISK->NETWORK
+    ForceLRU, // LRU->DISK->NO_NETWORK
+    ForceDisk, // NO_LRU->DISK->NO_NETWORK
+    ForceNetwork // NO_LRU->NO_DISK->NETWORK
 }
 
 sealed class PicassoScaleType {
@@ -55,23 +54,19 @@ data class PicassoImageBuilder(
 fun ImageView.loadImage(imageUrl: String?, picassoOption: PicassoOption) {
     with(picassoOption) {
         val picasso = Picasso.get()
-
         //enables logging
         picasso.isLoggingEnabled = enableDebug
-
         //green (memory, best performance)
         //blue (disk, good performance)
         //red (network, worst performance)
         picasso.setIndicatorsEnabled(enableDebug)
-
         picasso.loadOrError(imageUrl, picassoOption)
-
             .also {
                 when (scaleType) {
                     is PicassoScaleType.Default -> {
                         //do nothing
                     }
-                    is PicassoScaleType.CenterCrop -> it.centerCrop()
+                    is PicassoScaleType.CenterCrop -> it.fit().centerCrop()
                     is PicassoScaleType.Fit -> it.fit()
                     is PicassoScaleType.CenterInside -> it.centerInside()
                     is PicassoScaleType.Custom -> with(scaleType) {
@@ -85,29 +80,22 @@ fun ImageView.loadImage(imageUrl: String?, picassoOption: PicassoOption) {
                 }
             }
             .also {
-                /***
-                 * wjay ,asdkoasd aldkas
-                 */
-                when (cacheLevel) {
-                    SkipCache.NONE -> {
+                when (cache) {
+                    PicassoCache.Default -> {
                         //do nothing
-                        //all cache enabled
                     }
-                    SkipCache.ALL -> {
-                        // all cache disabled
-                        it.memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
-                        it.networkPolicy(NetworkPolicy.NO_CACHE)
+                    PicassoCache.ForceLRU -> {
+                        it.networkPolicy(NetworkPolicy.OFFLINE)
                     }
-                    SkipCache.MEMORY -> {
-                        // memory cache skipped
+                    PicassoCache.Disk -> {
                         it.memoryPolicy(MemoryPolicy.NO_CACHE)
                     }
-                    SkipCache.DISK -> {
-                        // disk cache skipped
-                        it.memoryPolicy(MemoryPolicy.NO_STORE)
+                    PicassoCache.ForceDisk -> {
+                        it.memoryPolicy(MemoryPolicy.NO_CACHE)
+                        it.networkPolicy(NetworkPolicy.OFFLINE)
                     }
-                    SkipCache.NETWORK -> {
-                        // network cache skipped
+                    PicassoCache.ForceNetwork -> {
+                        it.memoryPolicy(MemoryPolicy.NO_CACHE, MemoryPolicy.NO_STORE)
                         it.networkPolicy(NetworkPolicy.NO_CACHE)
                     }
                 }
