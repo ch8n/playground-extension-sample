@@ -7,6 +7,8 @@ import com.squareup.picasso.*
 import kotlinx.android.synthetic.main.activity_main.*
 
 
+
+
 data class PicassoOption(
     @DrawableRes val errorHolder: Int,
     @DrawableRes val placeholder: Int? = null,
